@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">RSS-News</string>
+    <string name="map">Карта</string>
+    <string name="settings">Настройки</string>
+    <string name="close">Выход</string>
+
+    <string-array name="default_sites">
+        <item>http://online.anidub.com/rss.xml</item>
+        <item>https://news.tut.by/rss/index.rss</item>
+        <item>https://news.yandex.ru/hockey.rss</item>
+        <item>https://lenta.ru/rss/news</item>
+        <item>http://www.animacity.ru/rss/animes/news.rss</item>
+        <item>http://animevost.org/rss.xml</item>
+    </string-array>
+
+</resources>
