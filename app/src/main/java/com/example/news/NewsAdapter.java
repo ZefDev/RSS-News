@@ -2,6 +2,7 @@ package com.example.news;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +48,7 @@ public class NewsAdapter extends BaseAdapter {
         TextView titleTextView = (TextView) rowView.findViewById(R.id.recipe_list_title);
         TextView dateTextView = (TextView) rowView.findViewById(R.id.list_date);
 // Get subtitle element
-        TextView subtitleTextView = (TextView)  rowView.findViewById(R.id.recipe_list_subtitle);
+        final TextView subtitleTextView = (TextView)  rowView.findViewById(R.id.recipe_list_subtitle);
 // Get detail element
         //TextView detailTextView = (TextView)  rowView.findViewById(R.id.recipe_list_detail);
 // Get thumbnail element
@@ -57,12 +58,21 @@ public class NewsAdapter extends BaseAdapter {
         Button share = (Button) rowView.findViewById(R.id.share);
         share.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    if(subtitleTextView.getMaxLines() != Integer.MAX_VALUE){
+                        subtitleTextView.setMaxLines(Integer.MAX_VALUE);
+                    }
+                    else {
+                        subtitleTextView.setMaxLines(3);
+                    }
+                }
+
+                /*Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                 sharingIntent.setType("text/plain");
                 String shareBody = "Ссылка на новость "+news.getLink();
                 sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Subject Here");
                 sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-                context.startActivity(sharingIntent);
+                context.startActivity(sharingIntent);*/
             }
         });
 

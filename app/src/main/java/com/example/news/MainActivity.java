@@ -10,9 +10,11 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
@@ -39,6 +41,9 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     LinearLayout rssView;
     LinearLayout settingsView;
     Spinner listSites;
+    private static final String LOG_TAG = "MyActivity";
+    Boolean isCanRefresh = false;
+    task t;
 
     public String defaultRss = "http://online.anidub.com/rss.xml";
     //https://news.tut.by/rss/index.rss // https://news.yandex.ru/society.rss //https://lenta.ru/rss/news //http://www.animacity.ru/rss/animes/news.rss
@@ -46,8 +51,8 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        task t = new task();
-        t.execute();
+        new task().execute();
+        //t.execute();
         settingsView = (LinearLayout) findViewById(R.id.settingsView);
         rssView = (LinearLayout) findViewById(R.id.rssView);
         listView = (ListView)findViewById(R.id.listView);
@@ -58,12 +63,43 @@ public class MainActivity extends AppCompatActivity { // AppCompat
 
         actionBar = getActionBar();
 
+
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if(listView.getFirstVisiblePosition()>0){
+                    isCanRefresh = true;
+                }
+                if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE
+                        && (listView.getLastVisiblePosition() - listView.getHeaderViewsCount() -
+                        listView.getFooterViewsCount()) >= (listView.getCount() - 1)) {
+                    Toast.makeText(getApplicationContext(),"Типо подгрузил контент из базы",Toast.LENGTH_LONG).show();
+                    // Now your listview has hit the bottom
+                }
+                else if((scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) & (listView.getFirstVisiblePosition()==0)){
+                    if(isCanRefresh) {
+                        progressBar.setVisibility(View.VISIBLE);
+                        listView.setVisibility(View.GONE);
+                        new task().execute();
+                        isCanRefresh = false;
+                    }
+                }
+                //Log.d(LOG_TAG, "scrollState = " + scrollState);
+            }
+
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                /*Log.d(LOG_TAG, "scroll: firstVisibleItem = " + firstVisibleItem
+                        + ", visibleItemCount" + visibleItemCount
+                        + ", totalItemCount" + totalItemCount);*/
+            }
+        });
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
                                     long id) {
-                Toast.makeText(getApplicationContext(), ((TextView) itemClicked).getText(),
-                        Toast.LENGTH_SHORT).show();
+                /*Toast.makeText(getApplicationContext(), ((TextView) itemClicked).getText(),
+                        Toast.LENGTH_SHORT).show();*/
             }
         });
 
