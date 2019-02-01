@@ -1,26 +1,18 @@
 package com.example.news;
 
-import android.os.AsyncTask;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
-import android.widget.ListView;
+
+import com.example.news.db.entity.RssItem;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 public class Parser {
     static final String PUB_DATE = "pubDate";

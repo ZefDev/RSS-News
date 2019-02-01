@@ -14,63 +14,97 @@
             android:gravity="center"
             android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/rssView"
+            <LinearLayout
+                android:id="@+id/rssView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal|center_vertical"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/progressBar3"
+                    style="@style/Widget.AppCompat.ProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center_vertical|center_horizontal"
+                    android:indeterminate="true"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/noNewsTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal|center_vertical"
-                    android:orientation="vertical"
-                    android:visibility="visible">
+                    android:gravity="center"
+                    android:text="Новостей не найдено. Проверьте подключение к интернету!"
+                    android:textSize="30sp"
+                    android:textStyle="italic"
+                    android:visibility="gone"
+                    tools:text="" />
 
-                        <ProgressBar
-                            android:id="@+id/progressBar3"
-                            style="@style/Widget.AppCompat.ProgressBar"
-                            android:layout_width="match_parent"
-                            android:layout_height="150dp"
-                            android:layout_gravity="center_vertical|center_horizontal"
-                            android:indeterminate="true"
-                            android:visibility="visible" />
+                <ListView
+                    android:id="@+id/listView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/light_gray"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="10.0sp"
+                    android:visibility="gone"
+                    tools:layout_editor_absoluteX="0dp"
+                    tools:layout_editor_absoluteY="60dp" />
+            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/noNewsTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="Новостей не найдено. Проверьте подключение к интернету!"
-                            android:textSize="30sp"
-                            android:textStyle="italic"
-                            android:visibility="gone"
-                            tools:text="" />
+            <LinearLayout
+                android:id="@+id/settingsView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:visibility="invisible">
 
-                        <ListView
-                            android:id="@+id/listView"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@color/light_gray"
-                            android:divider="@android:color/transparent"
-                            android:dividerHeight="10.0sp"
-                            android:visibility="gone"
-                            tools:layout_editor_absoluteX="0dp"
-                            tools:layout_editor_absoluteY="60dp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/settingsView"
+                <Spinner
+                    android:id="@+id/listSites"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:visibility="gone">
+                    android:entries="@array/default_sites" />
 
-                        <Spinner
-                            android:id="@+id/listSites"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:entries="@array/default_sites" />
-                </LinearLayout>
+                <EditText
+                    android:id="@+id/editText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Наименование ленты"
+                    android:inputType="textPersonName" />
 
-                <android.support.design.widget.BottomNavigationView
+                <EditText
+                    android:id="@+id/editText2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Адрес веб-сайта"
+                    android:inputType="textPersonName" />
+
+                <Button
+                    android:id="@+id/btnAddSite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Добавить" />
+
+                <Button
+                    android:id="@+id/btnChangeSite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Изменить" />
+
+                <Button
+                    android:id="@+id/btnDeleteSite"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Удалить" />
+            </LinearLayout>
+
+            <android.support.design.widget.BottomNavigationView
                     android:id="@+id/bottom_navigation"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

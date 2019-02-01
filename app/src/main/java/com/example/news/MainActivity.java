@@ -1,22 +1,20 @@
 package com.example.news;
 
 import android.app.ActionBar;
-import android.app.Activity;
-import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
-import android.widget.Adapter;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -24,15 +22,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.xmlpull.v1.XmlPullParserException;
+import com.example.news.db.entity.RssItem;
+import com.example.news.db.entity.Site;
+import com.example.news.service.RssItemService;
+import com.example.news.service.servicelmpl.RssItemServicelmpl;
+import com.example.news.service.servicelmpl.SiteServicelmpl;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity { // AppCompat
 
-    ArrayList<RssItem> list = new ArrayList<RssItem>();
+    ArrayList<RssItem> list = new ArrayList<>();
     ListView listView;
     ProgressBar progressBar;
     TextView noNewsTextView;
@@ -44,6 +46,12 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     private static final String LOG_TAG = "MyActivity";
     Boolean isCanRefresh = false;
     task t;
+    private SiteTask mAddSiteTask = null;
+    private SiteServicelmpl siteService;
+    private List<Site> sites = new ArrayList<>();
+    private RssItemServicelmpl rssItemsService;
+    Button btnAddSite,btnDeleteSite,btnChangeSite;
+    TextView name,adress;
 
     public String defaultRss = "http://online.anidub.com/rss.xml";
     //https://news.tut.by/rss/index.rss // https://news.yandex.ru/society.rss //https://lenta.ru/rss/news //http://www.animacity.ru/rss/animes/news.rss
@@ -51,7 +59,13 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        new task().execute();
+        siteService = new SiteServicelmpl(MainActivity.this);
+        rssItemsService = new RssItemServicelmpl(MainActivity.this);
+
+        getSitesFromDB();
+
+
+
         //t.execute();
         settingsView = (LinearLayout) findViewById(R.id.settingsView);
         rssView = (LinearLayout) findViewById(R.id.rssView);
@@ -60,9 +74,43 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         noNewsTextView= (TextView)findViewById(R.id.noNewsTextView);
         bottomNavigation = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         listSites = (Spinner) findViewById(R.id.listSites);
-
+        btnAddSite = (Button) findViewById(R.id.btnAddSite);
+        btnDeleteSite = (Button) findViewById(R.id.btnDeleteSite);
+        btnChangeSite = (Button) findViewById(R.id.btnChangeSite);
+        name = (TextView) findViewById(R.id.editText);
+        adress = (TextView) findViewById(R.id.editText2);
+        startApp();
         actionBar = getActionBar();
-
+        /* update rss-site*/
+        btnChangeSite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(listSites.getSelectedItem()!=null) {
+                    Site changingSite = (Site)listSites.getSelectedItem();
+                    changingSite.setName(name.getText().toString());
+                    changingSite.setAddress(adress.getText().toString());
+                    changeSite((Site)listSites.getSelectedItem());
+                }
+            }
+        });
+        /* deleted rss-site*/
+        btnDeleteSite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(listSites.getSelectedItem()!=null) {
+                    deleteSite((Site)listSites.getSelectedItem());
+                }
+            }
+        });
+        /* addition rss-site*/
+        btnAddSite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (name.getText().toString().length()!=0 & adress.getText().toString().length()!=0 ) {
+                    new SiteTask(name.getText().toString(), adress.getText().toString()).execute();
+                }
+            }
+        });
 
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
             public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -76,12 +124,13 @@ public class MainActivity extends AppCompatActivity { // AppCompat
                     // Now your listview has hit the bottom
                 }
                 else if((scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) & (listView.getFirstVisiblePosition()==0)){
+                    /* Updating the list when reaching the beginning list
                     if(isCanRefresh) {
                         progressBar.setVisibility(View.VISIBLE);
                         listView.setVisibility(View.GONE);
                         new task().execute();
                         isCanRefresh = false;
-                    }
+                    }*/
                 }
                 //Log.d(LOG_TAG, "scrollState = " + scrollState);
             }
@@ -94,39 +143,25 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             }
         });
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View itemClicked, int position,
-                                    long id) {
-                /*Toast.makeText(getApplicationContext(), ((TextView) itemClicked).getText(),
-                        Toast.LENGTH_SHORT).show();*/
-            }
-        });
-
+        /* open web-version rss-news*/
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                Toast.makeText(MainActivity.this,list.get(position).getDescription(),Toast.LENGTH_LONG).show();
                 Intent i = new Intent(MainActivity.this, WebPage.class);
                 i.putExtra("link", list.get(position).getLink());
                 startActivity(i);
-                //NewsAdapter adapter=(NewsAdapter) listView.getAdapter();
-                //String  selectedFromList = (String) adapter.getItem(position);
             }
         });
+
+
+
         bottomNavigation.setOnNavigationItemSelectedListener(
                 new BottomNavigationView.OnNavigationItemSelectedListener() {
                     @Override
                     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.action_map:
-                                rssView.setVisibility(View.VISIBLE);
-                                settingsView.setVisibility(View.GONE);
-                                progressBar.setVisibility(View.VISIBLE);
-                                listView.setVisibility(View.GONE);
-                                task t = new task();
-                                t.execute();
+                                startApp();
                                 break;
                             case R.id.action_dial:
                                 rssView.setVisibility(View.GONE);
@@ -140,6 +175,15 @@ public class MainActivity extends AppCompatActivity { // AppCompat
                     }
                 });
 
+    }
+
+    public void startApp(){
+        rssView.setVisibility(View.VISIBLE);
+        settingsView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+        listView.setVisibility(View.GONE);
+        task t = new task();
+        t.execute();
     }
 
     @Override
@@ -165,7 +209,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-
+    /* loading rss.xml in bd and display in list */
     private class task extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -181,6 +225,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
 
             listView.setAdapter(listAdapter);
             if(list.size()!=0) {
+
                 progressBar.setVisibility(View.GONE);
                 listView.setVisibility(View.VISIBLE);
             }
@@ -194,10 +239,138 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         @Override
         protected Void doInBackground(Void... arg0) {
 
-            Parser w1 = new Parser();
-            list = w1.getList(listSites.getSelectedItem().toString());
+            if(isNetworkConnected()){
+                Parser w1 = new Parser();
+                if(listSites.getSelectedItem()!=null) {
+                    noNewsTextView.setVisibility(View.GONE);
+                    list = w1.getList(listSites.getSelectedItem().toString());
+                    rssItemsService.deleteAll();
+                    for (RssItem item : list)
+                    {
+                        rssItemsService.insertAll(item);
+                    }
+                }
+            }
+            else {
+                if(listSites.getSelectedItem()!=null) {
+                    noNewsTextView.setVisibility(View.GONE);
+                    /* Велосипед для румаа так как эта падла види только List*/
+                    list.clear();
+                    List<RssItem> l = rssItemsService.getAll();
+                    for (int i=0;i<l.size();i++){
+                        list.add(l.get(i));
+                    }
+                    //list = rssItemsService.getAll();
+                }
+            }
+
 
             return null;
         }
+
+        private boolean isNetworkConnected() {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            return cm.getActiveNetworkInfo() != null;
+        }
+
+
+    }
+
+
+
+    /* addition new rss-site*/
+    public class SiteTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final String mName;
+        private final String mAdress;
+
+        SiteTask(String name, String adress) {
+            mName = name;
+            mAdress = adress;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            // TODO: attempt authentication against a network service.
+
+                Site site = new Site();
+                site.setName(mName);
+                site.setAddress(mAdress);
+                siteService.insertAll(site);
+                sites = siteService.getAll();
+
+            // TODO: register the new account here.
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            mAddSiteTask = null;
+            if (success) {
+                Toast.makeText(MainActivity.this, "Site is added ", Toast.LENGTH_LONG).show();
+                listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+            }
+        }
+        @Override
+        protected void onCancelled() {
+            mAddSiteTask = null;
+        }
+    }
+
+    /* loading rss-site in spinner from db*/
+    private void getSitesFromDB() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                sites = siteService.getAll();
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void agentsCount) {
+                listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+            }
+        }.execute();
+    }
+
+    /* update rss-site from db */
+    private void changeSite(Site site){
+        new AsyncTask<Site, Void, Void>() {
+            @Override
+            protected Void doInBackground(Site... params) {
+                if(params[0]!=null) {
+                    siteService.update(params[0]);
+                    sites = siteService.getAll();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void agentsCount) {
+                listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+
+            }
+        }.execute(site);
+    }
+
+    /* delete rss-site from db*/
+    private void deleteSite(Site site) {
+        new AsyncTask<Site, Void, Void>() {
+            @Override
+            protected Void doInBackground(Site... params) {
+                if(params[0]!=null) {
+                    siteService.delete(params[0]);
+                    sites = siteService.getAll();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void agentsCount) {
+                listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+
+            }
+        }.execute(site);
     }
 }
