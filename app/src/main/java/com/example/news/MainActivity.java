@@ -1,12 +1,12 @@
 package com.example.news;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.example.news.db.entity.RssItem;
 import com.example.news.db.entity.Site;
-import com.example.news.service.RssItemService;
 import com.example.news.service.servicelmpl.RssItemServicelmpl;
 import com.example.news.service.servicelmpl.SiteServicelmpl;
 
@@ -55,17 +54,21 @@ public class MainActivity extends AppCompatActivity { // AppCompat
 
     public String defaultRss = "http://online.anidub.com/rss.xml";
     //https://news.tut.by/rss/index.rss // https://news.yandex.ru/society.rss //https://lenta.ru/rss/news //http://www.animacity.ru/rss/animes/news.rss
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        getSitesFromDB();
+        startApp();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         siteService = new SiteServicelmpl(MainActivity.this);
         rssItemsService = new RssItemServicelmpl(MainActivity.this);
-
-        getSitesFromDB();
-
-
-
         //t.execute();
         settingsView = (LinearLayout) findViewById(R.id.settingsView);
         rssView = (LinearLayout) findViewById(R.id.rssView);
@@ -79,8 +82,9 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         btnChangeSite = (Button) findViewById(R.id.btnChangeSite);
         name = (TextView) findViewById(R.id.editText);
         adress = (TextView) findViewById(R.id.editText2);
-        startApp();
-        actionBar = getActionBar();
+
+
+        actionBar = getSupportActionBar();
         /* update rss-site*/
         btnChangeSite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -181,6 +185,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         rssView.setVisibility(View.VISIBLE);
         settingsView.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
+        noNewsTextView.setVisibility(View.GONE);
         listView.setVisibility(View.GONE);
         task t = new task();
         t.execute();
@@ -191,6 +196,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         switch (item.getItemId()) {
             case R.id.refresh:
                 progressBar.setVisibility(View.VISIBLE);
+                noNewsTextView.setVisibility(View.GONE);
                 listView.setVisibility(View.GONE);
                 task t = new task();
                 t.execute();
@@ -220,12 +226,12 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
+            listView.setAdapter(null);
             NewsAdapter listAdapter = new
                     NewsAdapter(MainActivity.this, list);
 
             listView.setAdapter(listAdapter);
             if(list.size()!=0) {
-
                 progressBar.setVisibility(View.GONE);
                 listView.setVisibility(View.VISIBLE);
             }
@@ -233,37 +239,55 @@ public class MainActivity extends AppCompatActivity { // AppCompat
                 progressBar.setVisibility(View.GONE);
                 noNewsTextView.setVisibility(View.VISIBLE);
             }
-
+            if(listSites.getSelectedItem()!=null) {
+                actionBar.setTitle(((Site) listSites.getSelectedItem()).getName());
+            }
         }
 
         @Override
         protected Void doInBackground(Void... arg0) {
-
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Site selectedSite = null;
             if(isNetworkConnected()){
                 Parser w1 = new Parser();
-                if(listSites.getSelectedItem()!=null) {
+
+                if(listSites.getAdapter().getCount()!=0) {
+                    selectedSite = (Site) listSites.getSelectedItem();
                     noNewsTextView.setVisibility(View.GONE);
-                    list = w1.getList(listSites.getSelectedItem().toString());
-                    rssItemsService.deleteAll();
-                    for (RssItem item : list)
+                    list.clear();
+                    list = w1.getList(selectedSite.getAddress());
+
+                    rssItemsService.deleteAllBySiteId(selectedSite.getId());
+                    for (int i=0;i<list.size();i++)
                     {
-                        rssItemsService.insertAll(item);
+                        list.get(i).setSiteId(selectedSite.getId());
+                        rssItemsService.insertAll(list.get(i));
                     }
+
                 }
             }
             else {
-                if(listSites.getSelectedItem()!=null) {
+                if(listSites.getAdapter().getCount()!=0) {
                     noNewsTextView.setVisibility(View.GONE);
+
                     /* Велосипед для румаа так как эта падла види только List*/
                     list.clear();
-                    List<RssItem> l = rssItemsService.getAll();
+                    try {
+                        selectedSite = (Site) listSites.getSelectedItem();
+                    }
+                    catch (Exception e){
+                        return null; //ещё один лясик
+                    }
+                    List<RssItem> l = rssItemsService.findRssItemBySiteId(selectedSite.getId());
                     for (int i=0;i<l.size();i++){
                         list.add(l.get(i));
                     }
-                    //list = rssItemsService.getAll();
                 }
             }
-
 
             return null;
         }
@@ -329,9 +353,12 @@ public class MainActivity extends AppCompatActivity { // AppCompat
 
             @Override
             protected void onPostExecute(Void agentsCount) {
+
                 listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+
             }
         }.execute();
+
     }
 
     /* update rss-site from db */

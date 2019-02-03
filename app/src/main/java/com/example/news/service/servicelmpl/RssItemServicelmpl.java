@@ -23,6 +23,14 @@ public class RssItemServicelmpl implements RssItemService {
     }
 
     @Override
+    public List<RssItem> findRssItemBySiteId(int siteId) {
+        return rssItemDAO.findRssItemBySiteId(siteId);
+    }
+
+    @Override
+    public void deleteAllBySiteId(int siteId) {rssItemDAO.deleteAllBySiteId(siteId);}
+
+    @Override
     public void delete(RssItem rssItem) {
         rssItemDAO.delete(rssItem);
     }

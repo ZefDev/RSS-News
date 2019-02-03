@@ -2,9 +2,15 @@ package com.example.news.db.entity;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.PrimaryKey;
 
-@Entity
+import static android.arch.persistence.room.ForeignKey.CASCADE;
+
+@Entity(foreignKeys = @ForeignKey(entity = Site.class,
+        parentColumns = "id",
+        childColumns = "siteId",
+        onDelete = CASCADE))
 public class RssItem {
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -26,6 +32,18 @@ public class RssItem {
 
     @ColumnInfo(name = "label")
     private String label;
+
+    public int getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(int siteId) {
+        this.siteId = siteId;
+    }
+
+    @ColumnInfo(name = "siteId")
+    private int siteId;
+
 
     public int getId() {
         return id;

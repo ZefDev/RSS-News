@@ -8,7 +8,6 @@ import android.arch.persistence.room.Update;
 
 import com.example.news.db.entity.RssItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Dao
@@ -20,11 +19,17 @@ public interface RssItemDAO {
     @Query("DELETE FROM RssItem")
     void deleteAll();
 
-    @Update
-    public void updateRssItem(RssItem... rssItems);
+    @Query("DELETE FROM RssItem WHERE siteId=:siteId ")
+    void deleteAllBySiteId(int siteId);
 
     @Query("SELECT * FROM RssItem WHERE id IN (:userIds)")
     List<RssItem> loadAllByIds(int[] userIds);
+
+    @Query("SELECT * FROM RssItem WHERE siteId=:siteId")
+    List<RssItem> findRssItemBySiteId(final int siteId);
+
+    @Update
+    public void updateRssItem(RssItem... rssItems);
 
     @Insert
     void insertAll(RssItem... rssItems);

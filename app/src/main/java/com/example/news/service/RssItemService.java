@@ -8,6 +8,10 @@ public interface RssItemService {
 
         List<RssItem> getAll();
 
+        List<RssItem> findRssItemBySiteId(int siteId);
+
+        void deleteAllBySiteId(int siteId);
+
         void delete(RssItem rssItem);
 
         void deleteAll();
