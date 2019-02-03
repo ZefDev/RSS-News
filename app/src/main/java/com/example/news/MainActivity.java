@@ -9,6 +9,7 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.PopupMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     LinearLayout rssView;
     LinearLayout settingsView;
     Spinner listSites;
+    Spinner listSites_sorting;
     private static final String LOG_TAG = "MyActivity";
     Boolean isCanRefresh = false;
     task t;
@@ -49,7 +51,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
     private SiteServicelmpl siteService;
     private List<Site> sites = new ArrayList<>();
     private RssItemServicelmpl rssItemsService;
-    Button btnAddSite,btnDeleteSite,btnChangeSite;
+    Button btnAddSite,btnDeleteSite,btnChangeSite,btnMore;
     TextView name,adress;
 
     public String defaultRss = "http://online.anidub.com/rss.xml";
@@ -63,13 +65,9 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         startApp();
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public void Init(){
         siteService = new SiteServicelmpl(MainActivity.this);
         rssItemsService = new RssItemServicelmpl(MainActivity.this);
-        //t.execute();
         settingsView = (LinearLayout) findViewById(R.id.settingsView);
         rssView = (LinearLayout) findViewById(R.id.rssView);
         listView = (ListView)findViewById(R.id.listView);
@@ -77,14 +75,23 @@ public class MainActivity extends AppCompatActivity { // AppCompat
         noNewsTextView= (TextView)findViewById(R.id.noNewsTextView);
         bottomNavigation = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         listSites = (Spinner) findViewById(R.id.listSites);
+        //listSites_sorting = (Spinner) findViewById(R.id.listSites_sorting);
+        btnMore = (Button) findViewById(R.id.more);
         btnAddSite = (Button) findViewById(R.id.btnAddSite);
         btnDeleteSite = (Button) findViewById(R.id.btnDeleteSite);
         btnChangeSite = (Button) findViewById(R.id.btnChangeSite);
         name = (TextView) findViewById(R.id.editText);
         adress = (TextView) findViewById(R.id.editText2);
-
-
         actionBar = getSupportActionBar();
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Init();
+
         /* update rss-site*/
         btnChangeSite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,6 +123,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             }
         });
 
+
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if(listView.getFirstVisiblePosition()>0){
@@ -141,11 +149,10 @@ public class MainActivity extends AppCompatActivity { // AppCompat
 
             public void onScroll(AbsListView view, int firstVisibleItem,
                                  int visibleItemCount, int totalItemCount) {
-                /*Log.d(LOG_TAG, "scroll: firstVisibleItem = " + firstVisibleItem
-                        + ", visibleItemCount" + visibleItemCount
-                        + ", totalItemCount" + totalItemCount);*/
             }
         });
+
+
 
         /* open web-version rss-news*/
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -157,6 +164,17 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             }
         });
 
+        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                //Creating the instance of PopupMenu
+
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+                //Log.d(LOG_TAG, "itemSelect: nothing");
+            }
+        });
 
 
         bottomNavigation.setOnNavigationItemSelectedListener(
@@ -202,6 +220,9 @@ public class MainActivity extends AppCompatActivity { // AppCompat
                 t.execute();
 
                 return true;
+           // case R.id.menuSort:
+
+             //   return true;
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
@@ -334,6 +355,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             if (success) {
                 Toast.makeText(MainActivity.this, "Site is added ", Toast.LENGTH_LONG).show();
                 listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+                //listSites_sorting.setAdapter(new myCursorAdapter(MainActivity.this,sites));
             }
         }
         @Override
@@ -355,6 +377,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             protected void onPostExecute(Void agentsCount) {
 
                 listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+                //listSites_sorting.setAdapter(new myCursorAdapter(MainActivity.this,sites));
 
             }
         }.execute();
@@ -376,6 +399,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             @Override
             protected void onPostExecute(Void agentsCount) {
                 listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
+                //listSites_sorting.setAdapter(new myCursorAdapter(MainActivity.this,sites));
 
             }
         }.execute(site);
@@ -396,7 +420,7 @@ public class MainActivity extends AppCompatActivity { // AppCompat
             @Override
             protected void onPostExecute(Void agentsCount) {
                 listSites.setAdapter(new myCursorAdapter(MainActivity.this,sites));
-
+                //listSites_sorting.setAdapter(new myCursorAdapter(MainActivity.this,sites));
             }
         }.execute(site);
     }

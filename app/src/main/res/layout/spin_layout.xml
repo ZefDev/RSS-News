@@ -15,6 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textSize="18dp"
             tools:layout_editor_absoluteX="72dp"
             tools:layout_editor_absoluteY="49dp" />
 
@@ -23,6 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:visibility="gone"
             tools:layout_editor_absoluteX="155dp"
             tools:layout_editor_absoluteY="39dp" />
     </LinearLayout>
